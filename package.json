@@ -1,24 +1,85 @@
 {
   "$schema": "https://www.raycast.com/schemas/extension.json",
   "name": "raycast-discord-menu",
-  "title": "raycast-discord-menu",
-  "description": "",
-  "icon": "extension-icon.png",
+  "title": "Discord",
+  "description": "Discord remote commands",
+  "icon": "discord_1.png",
   "author": "micoli",
   "license": "MIT",
   "commands": [
     {
-      "name": "ddiscord",
-      "title": "ddiscord",
-      "description": "",
+      "name": "ddiscord-stream-screen-1",
+      "title": "Stream Screen 1",
+      "description": "Start stream on screen 1",
+      "keywords": [
+        "discord",
+        "stream",
+        "start",
+        "screen"
+      ],
+      "mode": "no-view"
+    },
+    {
+      "name": "ddiscord-stream-screen-2",
+      "title": "Stream Screen 2",
+      "description": "Start stream on screen 2",
+      "keywords": [
+        "discord",
+        "stream",
+        "start",
+        "screen"
+      ],
+      "mode": "no-view"
+    },
+    {
+      "name": "ddiscord-stop-stream",
+      "title": "Stop Stream",
+      "description": "Stop stream (1 or 2)",
+      "keywords": [
+        "discord",
+        "stream",
+        "stop",
+        "screen"
+      ],
+      "mode": "no-view"
+    },
+    {
+      "name": "ddiscord-toggle-speaker",
+      "title": "Toggle Speaker",
+      "description": "Toggle speaker",
+      "keywords": [
+        "discord",
+        "toggle",
+        "speaker"
+      ],
+      "mode": "no-view"
+    },
+    {
+      "name": "ddiscord-launch-discord",
+      "title": "Launch Discord",
+      "description": "launch discord with remote debugging",
+      "keywords": [
+        "discord",
+        "launch",
+        "remote"
+      ],
+      "mode": "no-view"
+    },
+    {
+      "name": "ddiscord-inject-wrapper",
+      "title": "Discord Inject Wrapper",
+      "description": "Inject wrapper in discord instance",
+      "keywords": [
+        "discord",
+        "inject"
+      ],
       "mode": "no-view"
     },
     {
       "name": "ddiscord-menu",
-      "title": "Discord",
-      "description": "See your GitHub pull requests at a glance",
-      "mode": "menu-bar",
-      "interval": "5m"
+      "title": "Commands Menu",
+      "description": "Shortcuts for discord stream",
+      "mode": "menu-bar"
     }
   ],
   "dependencies": {
@@ -38,8 +99,8 @@
     "typescript": "^5.4.5"
   },
   "scripts": {
-    "build": "ray build",
-    "dev": "ray develop",
+    "build": "vite build && ray build",
+    "dev": "vite build && ray develop",
     "fix-lint": "ray lint --fix",
     "lint": "ray lint",
     "prepublishOnly": "echo \"\\n\\nIt seems like you are trying to publish the Raycast extension to npm.\\n\\nIf you did intend to publish it to npm, remove the \\`prepublishOnly\\` script and rerun \\`npm publish\\` again.\\nIf you wanted to publish it to the Raycast Store instead, use \\`npm run publish\\` instead.\\n\\n\" && exit 1",

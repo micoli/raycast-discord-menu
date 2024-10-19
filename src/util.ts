@@ -1,15 +1,26 @@
 import fetch from "node-fetch";
 import WebSocket from "ws";
+import { showToast, Toast } from "@raycast/api";
 
 let websocket: WebSocket | null = null;
 
 export async function debugWebsocketRequest(port: number, expression: string) {
   if (websocket === null) {
-    const response = await fetch(`http://127.0.0.1:${port}/json/list?t=123`);
-    let windows: any = await response.json();
-    websocket = new WebSocket(windows[0]["webSocketDebuggerUrl"]);
+    try{
+      const response = await fetch(`http://127.0.0.1:${port}/json/list?t=123`);
+      const windows: { webSocketDebuggerUrl: string }[] = (await response.json()) as { webSocketDebuggerUrl: string }[];
+      websocket = new WebSocket(windows[0].webSocketDebuggerUrl);
+    }catch (e){
+      try {
+        await showToast({
+          style: Toast.Style.Failure,
+          title: 'Connection refused, Is discord launched? is wrapper injected ?',
+        });
+      }catch (Error){}
+      return;
+    }
   }
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
     websocket!.on("error", console.error);
     websocket!.on("close", () => {
       console.log("closed");
@@ -53,19 +64,19 @@ export async function debugWebsocketRequest(port: number, expression: string) {
 
 function inject(expression: string) {
   return JSON.stringify({
-    "id": 1,
-    "method": "Runtime.evaluate",
-    "params": {
-      "contextId": 1,
-      "doNotPauseOnExceptionsAndMuteConsole": false,
-      "expression": expression,
-      "generatePreview": false,
-      "returnByValue": false,
-      "objectGroup": "inject",
-      "includeCommandLineAPI": true,
-      "silent": true,
-      "userGesture": true,
-      "awaitPromise": true
-    }
+    id: 1,
+    method: "Runtime.evaluate",
+    params: {
+      contextId: 1,
+      doNotPauseOnExceptionsAndMuteConsole: false,
+      expression: expression,
+      generatePreview: false,
+      returnByValue: false,
+      objectGroup: "inject",
+      includeCommandLineAPI: true,
+      silent: true,
+      userGesture: true,
+      awaitPromise: true,
+    },
   });
 }
