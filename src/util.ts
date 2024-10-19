@@ -6,17 +6,19 @@ let websocket: WebSocket | null = null;
 
 export async function debugWebsocketRequest(port: number, expression: string) {
   if (websocket === null) {
-    try{
+    try {
       const response = await fetch(`http://127.0.0.1:${port}/json/list?t=123`);
       const windows: { webSocketDebuggerUrl: string }[] = (await response.json()) as { webSocketDebuggerUrl: string }[];
       websocket = new WebSocket(windows[0].webSocketDebuggerUrl);
-    }catch (e){
+    } catch (e) {
       try {
         await showToast({
           style: Toast.Style.Failure,
-          title: 'Connection refused, Is discord launched? is wrapper injected ?',
+          title: "Connection refused, Is discord launched? is wrapper injected ?",
         });
-      }catch (Error){}
+      } catch (error) {
+        console.log(error);
+      }
       return;
     }
   }
