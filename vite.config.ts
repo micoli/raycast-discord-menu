@@ -1,6 +1,7 @@
 import { defineConfig } from 'vite';
+
 export default defineConfig({
-  root: './inject-src',
+  root: './src/injected',
   base: '/',
   server: {
     watch: {
@@ -14,7 +15,7 @@ export default defineConfig({
     emptyOutDir: false,
     rollupOptions: {
       input: {
-        discordExecutor: 'inject-src/discordExecutor.ts',
+        discordExecutor: 'src/injected/index.ts',
       },
       output: {
         dir: 'assets/',
