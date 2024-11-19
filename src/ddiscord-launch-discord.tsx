@@ -1,5 +1,5 @@
 import child_process from "child_process";
-import { launchCommand, LaunchType } from "@raycast/api";
+import { closeMainWindow, launchCommand, LaunchType } from "@raycast/api";
 import waitPort from "wait-port";
 
 export default async function Command() {
@@ -25,6 +25,7 @@ export default async function Command() {
     }
     console.log(`The port is now open on IPv${ipVersion}!`);
     await launchCommand({ name: "ddiscord-inject-wrapper", type: LaunchType.Background });
+    await closeMainWindow();
   } catch (err) {
     console.error(`An unknown error occured while waiting for the port: ${err}`);
   }
