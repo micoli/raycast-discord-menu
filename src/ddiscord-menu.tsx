@@ -9,12 +9,14 @@ const voiceCommands: MenuCommand[] = [
 ];
 
 const audioCommands: MenuCommand[] = [
-  { title: "Toggle Microphone", icon: Icon.Microphone, command: "ddiscord-toggle-microphone" },
   { title: "Mute", icon: Icon.MicrophoneDisabled, command: "ddiscord-mute" },
   { title: "Unmute", icon: Icon.Microphone, command: "ddiscord-unmute" },
-  { title: "Toggle Speaker", icon: Icon.Speaker, command: "ddiscord-toggle-speaker" },
   { title: "Deafen", icon: Icon.SpeakerOff, command: "ddiscord-deafen" },
   { title: "Undeafen", icon: Icon.Speaker, command: "ddiscord-undeafen" },
+];
+const toggleAudioCommands: MenuCommand[] = [
+  { title: "Toggle Microphone", icon: Icon.Microphone, command: "ddiscord-toggle-microphone" },
+  { title: "Toggle Speaker", icon: Icon.Speaker, command: "ddiscord-toggle-speaker" },
 ];
 
 export default function Command() {
@@ -32,6 +34,8 @@ export default function Command() {
       {voiceCommands.map((item) => renderItem(item))}
       <MenuBarExtra.Separator />
       {audioCommands.map((item) => renderItem(item))}
+      <MenuBarExtra.Separator />
+      {toggleAudioCommands.map((item) => renderItem(item))}
       <MenuBarExtra.Separator />
       {renderItem(
         { title: "Voice members", icon: Icon.TwoPeople, command: "ddiscord-voice-members" },
