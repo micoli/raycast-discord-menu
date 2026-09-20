@@ -7,6 +7,7 @@
     noSpeaker: "Mettre en sourdine"
   };
   const SCREEN_TAB_INDEX = 1;
+  const SHARE_BUTTON_FALLBACK_INDEX = 1;
   const findByAriaLabel = (label) => document.querySelector(`[aria-label="${label}"]`);
   const findActionButton = (tooltipLabel, fallbackIndex) => {
     const buttons = Array.from(document.querySelectorAll('[class*="actionButtons_"] > button'));
@@ -17,6 +18,7 @@
     });
     return byTooltip ?? buttons[fallbackIndex] ?? null;
   };
+  const findShareButton = () => findActionButton(discordSelectorLabels.shareYourScreen, SHARE_BUTTON_FALLBACK_INDEX);
   const findScreenPickerTab = () => {
     const dialog = document.querySelector('[role="dialog"]');
     return (dialog == null ? void 0 : dialog.querySelectorAll('[role="tab"]')[SCREEN_TAB_INDEX]) ?? null;
@@ -67,6 +69,19 @@
     }
     return channelsWithMembers.length === 1 ? channelsWithMembers[0] : null;
   };
+  const isSwitchChecked = (label) => {
+    var _a;
+    return ((_a = findByAriaLabel(label)) == null ? void 0 : _a.getAttribute("aria-checked")) === "true";
+  };
+  const readDiscordState = () => {
+    var _a;
+    return {
+      muted: isSwitchChecked(discordSelectorLabels.mute),
+      deafened: isSwitchChecked(discordSelectorLabels.noSpeaker),
+      sharing: ((_a = findShareButton()) == null ? void 0 : _a.getAttribute("aria-pressed")) === "true",
+      voice: readConnectedVoiceChannel()
+    };
+  };
   const waitFor = (find, description, timeoutMs = 5e3) => {
     return new Promise((resolve, reject) => {
       const initial = find();
@@ -89,7 +104,6 @@
       observer.observe(document.body, { childList: true, subtree: true });
     });
   };
-  const SHARE_BUTTON_FALLBACK_INDEX = 1;
   class DiscordExecutor {
     run(message) {
       switch (message.type) {
@@ -109,14 +123,14 @@
           return this.clickSwitch(discordSelectorLabels.noSpeaker, false);
         case "undeafen":
           return this.clickSwitch(discordSelectorLabels.noSpeaker, true);
-        case "getVoiceMembers":
-          return readConnectedVoiceChannel();
+        case "getState":
+          return readDiscordState();
         default:
           throw new Error(`Unknown message ${JSON.stringify(message)}`);
       }
     }
     async startScreenShare(screenIndex) {
-      const shareButton = findActionButton(discordSelectorLabels.shareYourScreen, SHARE_BUTTON_FALLBACK_INDEX);
+      const shareButton = findShareButton();
       if (!shareButton) {
         throw new Error("Share button not found, is discord connected to a voice channel?");
       }

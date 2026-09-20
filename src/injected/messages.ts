@@ -7,7 +7,7 @@ export type DiscordMessage =
   | { type: "toggleSpeaker" }
   | { type: "deafen" }
   | { type: "undeafen" }
-  | { type: "getVoiceMembers" };
+  | { type: "getState" };
 
 export type VoiceMember = {
   name: string;
@@ -17,4 +17,11 @@ export type VoiceMember = {
 export type VoiceChannelState = {
   channel: string;
   members: VoiceMember[];
+};
+
+export type DiscordState = {
+  muted: boolean;
+  deafened: boolean;
+  sharing: boolean;
+  voice: VoiceChannelState | null;
 };

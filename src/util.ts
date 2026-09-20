@@ -3,7 +3,7 @@ import fs from "fs";
 import path from "path";
 import WebSocket from "ws";
 import { closeMainWindow, environment, showHUD } from "@raycast/api";
-import type { DiscordMessage, VoiceChannelState } from "./injected/messages";
+import type { DiscordMessage, DiscordState } from "./injected/messages";
 
 export const DEBUG_PORT = 5656;
 
@@ -86,7 +86,7 @@ export const sendDiscordMessage = <T = unknown>(message: DiscordMessage) =>
 
 export const reinjectExecutor = () => withDiscord(async () => undefined, { forceInject: true });
 
-export const getVoiceChannelState = () => sendDiscordMessage<VoiceChannelState | null>({ type: "getVoiceMembers" });
+export const getDiscordState = () => sendDiscordMessage<DiscordState>({ type: "getState" });
 
 export const runDiscordCommand = async (message: DiscordMessage) => {
   try {

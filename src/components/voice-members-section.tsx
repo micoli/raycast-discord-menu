@@ -4,7 +4,7 @@ import { memberIcon } from "../member-icon";
 
 type Props = {
   state?: VoiceChannelState | null;
-  error?: Error;
+  error?: string;
 };
 
 export default function VoiceMembersSection({ state, error }: Props) {

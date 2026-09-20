@@ -1,7 +1,9 @@
 import { Icon, launchCommand, LaunchType, MenuBarExtra } from "@raycast/api";
-import { useCachedPromise } from "@raycast/utils";
 import VoiceMembersSection from "./components/voice-members-section";
-import { getVoiceChannelState } from "./util";
+import { menuIcon } from "./menu-icon";
+import { useDiscordState } from "./use-discord-state";
+
+const REFRESH_INTERVAL_MS = 2500;
 
 type MenuCommand = { title: string; icon: Icon; command: string };
 
@@ -23,7 +25,7 @@ const toggleAudioCommands: MenuCommand[] = [
 ];
 
 export default function Command() {
-  const { data, error, isLoading } = useCachedPromise(getVoiceChannelState, [], { onError: () => undefined });
+  const { data, error, isLoading } = useDiscordState(REFRESH_INTERVAL_MS);
 
   const renderItem = ({ title, icon, command }: MenuCommand, type = LaunchType.Background) => (
     <MenuBarExtra.Item
@@ -35,11 +37,11 @@ export default function Command() {
   );
 
   return (
-    <MenuBarExtra isLoading={isLoading} icon="../assets/discord_1.png" tooltip="Discord helper">
+    <MenuBarExtra isLoading={isLoading} icon={menuIcon(error ? undefined : data)} tooltip="Discord helper">
       {voiceCommands.map((item) => renderItem(item))}
       <MenuBarExtra.Separator />
       {audioCommands.map((item) => renderItem(item))}
-      <VoiceMembersSection state={data} error={error} />
+      <VoiceMembersSection state={data?.voice} error={error} />
       {renderItem(
         { title: "Open live members list", icon: Icon.List, command: "ddiscord-voice-members" },
         LaunchType.UserInitiated,

@@ -1,6 +1,8 @@
-import type { VoiceChannelState } from "./messages";
+import { discordSelectorLabels } from "./aria-labels";
+import type { DiscordState, VoiceChannelState } from "./messages";
 
 const SCREEN_TAB_INDEX = 1;
+const SHARE_BUTTON_FALLBACK_INDEX = 1;
 
 export const findByAriaLabel = (label: string) => document.querySelector<HTMLElement>(`[aria-label="${label}"]`);
 
@@ -13,6 +15,9 @@ export const findActionButton = (tooltipLabel: string, fallbackIndex: number) =>
   });
   return byTooltip ?? buttons[fallbackIndex] ?? null;
 };
+
+export const findShareButton = () =>
+  findActionButton(discordSelectorLabels.shareYourScreen, SHARE_BUTTON_FALLBACK_INDEX);
 
 export const findScreenPickerTab = () => {
   const dialog = document.querySelector('[role="dialog"]');
@@ -72,3 +77,12 @@ export const readConnectedVoiceChannel = (): VoiceChannelState | null => {
   }
   return channelsWithMembers.length === 1 ? channelsWithMembers[0] : null;
 };
+
+const isSwitchChecked = (label: string) => findByAriaLabel(label)?.getAttribute("aria-checked") === "true";
+
+export const readDiscordState = (): DiscordState => ({
+  muted: isSwitchChecked(discordSelectorLabels.mute),
+  deafened: isSwitchChecked(discordSelectorLabels.noSpeaker),
+  sharing: findShareButton()?.getAttribute("aria-pressed") === "true",
+  voice: readConnectedVoiceChannel(),
+});

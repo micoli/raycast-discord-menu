@@ -1,16 +1,14 @@
 import { discordSelectorLabels } from "./aria-labels";
 import {
   dismissDialog,
-  findActionButton,
   findByAriaLabel,
   findScreenPickerTab,
   findScreenPickerTile,
-  readConnectedVoiceChannel,
+  findShareButton,
+  readDiscordState,
 } from "./discord-dom";
 import type { DiscordMessage } from "./messages";
 import { waitFor } from "./robot";
-
-const SHARE_BUTTON_FALLBACK_INDEX = 1;
 
 export class DiscordExecutor {
   run(message: DiscordMessage) {
@@ -31,15 +29,15 @@ export class DiscordExecutor {
         return this.clickSwitch(discordSelectorLabels.noSpeaker, false);
       case "undeafen":
         return this.clickSwitch(discordSelectorLabels.noSpeaker, true);
-      case "getVoiceMembers":
-        return readConnectedVoiceChannel();
+      case "getState":
+        return readDiscordState();
       default:
         throw new Error(`Unknown message ${JSON.stringify(message)}`);
     }
   }
 
   async startScreenShare(screenIndex: number) {
-    const shareButton = findActionButton(discordSelectorLabels.shareYourScreen, SHARE_BUTTON_FALLBACK_INDEX);
+    const shareButton = findShareButton();
     if (!shareButton) {
       throw new Error("Share button not found, is discord connected to a voice channel?");
     }
