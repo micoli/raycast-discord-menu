@@ -64,9 +64,10 @@ const openSession = (webSocketDebuggerUrl: string) =>
 
 const readInjectedBundle = () => fs.readFileSync(path.join(environment.assetsPath, "discordExecutor.js"), "utf8");
 
-const refreshMenuUrl = `raycast://extensions/${environment.ownerOrAuthorName}/${environment.extensionName}/ddiscord-refresh-menu`;
+const refreshMenuUrl = `raycast://extensions/${environment.ownerOrAuthorName}/${environment.extensionName}/ddiscord-refresh-menu?launchType=background`;
 
-// The executor tells raycast to refresh the menu bar (through this url) whenever the discord state changes
+// The executor tells raycast to refresh the menu bar (through this url) whenever the discord state changes.
+// launchType=background keeps the raycast window from opening
 const ensureExecutor = async (session: CdpSession, forceInject: boolean) => {
   const watchedUrl = await session.evaluate("document.discordExecutor?.watchedUrl ?? null");
   if (!forceInject && watchedUrl === refreshMenuUrl) {
