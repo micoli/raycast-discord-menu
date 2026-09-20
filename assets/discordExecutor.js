@@ -51,13 +51,13 @@ var __publicField = (obj, key, value) => __defNormalProp(obj, typeof key !== "sy
   const readMembers = (channelItem) => {
     const members = /* @__PURE__ */ new Map();
     channelItem.querySelectorAll('[class*="voiceUser"]').forEach((voiceUser) => {
-      var _a2, _b2, _c;
-      const name = (_a2 = voiceUser.querySelector('[role="button"][aria-label]')) == null ? void 0 : _a2.getAttribute("aria-label");
+      var _a2, _b2, _c, _d, _e, _f;
+      const name = ((_b2 = (_a2 = voiceUser.querySelector('[class*="username__"]')) == null ? void 0 : _a2.textContent) == null ? void 0 : _b2.trim()) || ((_d = (_c = voiceUser.querySelector('[role="button"][aria-label]')) == null ? void 0 : _c.getAttribute("aria-label")) == null ? void 0 : _d.split(",")[0]);
       if (!name || members.has(name)) {
         return;
       }
-      const avatarStyle = (_b2 = voiceUser.querySelector('[class*="avatar"]')) == null ? void 0 : _b2.style.backgroundImage;
-      members.set(name, { name, avatarUrl: (_c = avatarStyle == null ? void 0 : avatarStyle.match(/url\("?([^")]+)/)) == null ? void 0 : _c[1] });
+      const avatarStyle = (_e = voiceUser.querySelector('[class*="avatar"]')) == null ? void 0 : _e.style.backgroundImage;
+      members.set(name, { name, avatarUrl: (_f = avatarStyle == null ? void 0 : avatarStyle.match(/url\("?([^")]+)/)) == null ? void 0 : _f[1] });
     });
     return Array.from(members.values());
   };
@@ -110,11 +110,12 @@ var __publicField = (obj, key, value) => __defNormalProp(obj, typeof key !== "sy
   };
   const CHECK_THROTTLE_MS = 300;
   const MIN_NOTIFY_INTERVAL_MS = 1e3;
-  const startStateWatcher = (notifyUrl) => {
+  const startStateWatcher = () => {
     let lastState = JSON.stringify(readDiscordState());
     let lastNotifiedAt = 0;
     let pendingCheck;
     const check = () => {
+      var _a2;
       pendingCheck = void 0;
       const current = JSON.stringify(readDiscordState());
       if (current === lastState) {
@@ -127,7 +128,7 @@ var __publicField = (obj, key, value) => __defNormalProp(obj, typeof key !== "sy
       }
       lastState = current;
       lastNotifiedAt = Date.now();
-      window.open(notifyUrl);
+      (_a2 = window.notifyRaycast) == null ? void 0 : _a2.call(window, "stateChanged");
     };
     const observer = new MutationObserver(() => {
       pendingCheck ?? (pendingCheck = setTimeout(check, CHECK_THROTTLE_MS));
@@ -145,7 +146,7 @@ var __publicField = (obj, key, value) => __defNormalProp(obj, typeof key !== "sy
   };
   class DiscordExecutor {
     constructor() {
-      __publicField(this, "watchedUrl", null);
+      __publicField(this, "watching", false);
       __publicField(this, "stopWatching");
     }
     run(message) {
@@ -169,21 +170,21 @@ var __publicField = (obj, key, value) => __defNormalProp(obj, typeof key !== "sy
         case "getState":
           return readDiscordState();
         case "watchState":
-          return this.watchState(message.notifyUrl);
+          return this.watchState();
         default:
           throw new Error(`Unknown message ${JSON.stringify(message)}`);
       }
     }
-    watchState(notifyUrl) {
+    watchState() {
       var _a2;
       (_a2 = this.stopWatching) == null ? void 0 : _a2.call(this);
-      this.stopWatching = startStateWatcher(notifyUrl);
-      this.watchedUrl = notifyUrl;
+      this.stopWatching = startStateWatcher();
+      this.watching = true;
     }
     dispose() {
       var _a2;
       (_a2 = this.stopWatching) == null ? void 0 : _a2.call(this);
-      this.watchedUrl = null;
+      this.watching = false;
     }
     async startScreenShare(screenIndex) {
       const shareButton = findShareButton();

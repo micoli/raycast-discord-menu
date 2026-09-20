@@ -146,17 +146,6 @@
       "mode": "no-view"
     },
     {
-      "name": "ddiscord-refresh-menu",
-      "title": "Refresh Menu",
-      "description": "Refresh the menu bar, triggered by discord when its state changes",
-      "keywords": [
-        "discord",
-        "refresh",
-        "menu"
-      ],
-      "mode": "no-view"
-    },
-    {
       "name": "ddiscord-menu",
       "title": "Commands Menu",
       "description": "Shortcuts for discord stream",
@@ -182,14 +171,15 @@
     "wait-port": "^1.1.0"
   },
   "scripts": {
-    "build": "vite build && ray build",
-    "dev": "vite build && ray develop",
+    "build": "npm run build-inject && ray build",
+    "dev": "npm run build-inject && ray develop",
     "fix-lint": "ray lint --fix",
     "lint": "ray lint",
     "prepublishOnly": "echo \"\\n\\nIt seems like you are trying to publish the Raycast extension to npm.\\n\\nIf you did intend to publish it to npm, remove the \\`prepublishOnly\\` script and rerun \\`npm publish\\` again.\\nIf you wanted to publish it to the Raycast Store instead, use \\`npm run publish\\` instead.\\n\\n\" && exit 1",
     "publish": "npx @raycast/api@latest publish",
-    "build-inject": "vite build",
+    "build-inject": "vite build && npm run build-watcher",
     "watch-inject": "vite build --watch",
-    "build-icons": "node scripts/build-menu-icons.mjs"
+    "build-icons": "node scripts/build-menu-icons.mjs",
+    "build-watcher": "esbuild src/watcher/index.ts --bundle --platform=node --format=cjs --target=node22 --outfile=assets/discord-watcher.js"
   }
 }

@@ -3,9 +3,9 @@ import fs from "fs";
 import path from "path";
 import WebSocket from "ws";
 import { closeMainWindow, environment, showHUD } from "@raycast/api";
+import { DEBUG_PORT } from "./constants";
 import type { DiscordMessage, DiscordState } from "./injected/messages";
-
-export const DEBUG_PORT = 5656;
+import { ensureWatcherRunning } from "./watcher-process";
 
 type DebugTarget = { type: string; url: string; webSocketDebuggerUrl: string };
 
@@ -64,17 +64,16 @@ const openSession = (webSocketDebuggerUrl: string) =>
 
 const readInjectedBundle = () => fs.readFileSync(path.join(environment.assetsPath, "discordExecutor.js"), "utf8");
 
-const refreshMenuUrl = `raycast://extensions/${environment.ownerOrAuthorName}/${environment.extensionName}/ddiscord-refresh-menu?launchType=background`;
+const menuRefreshUrl = `raycast://extensions/${environment.ownerOrAuthorName}/${environment.extensionName}/ddiscord-menu?launchType=background`;
 
-// The executor tells raycast to refresh the menu bar (through this url) whenever the discord state changes.
-// launchType=background keeps the raycast window from opening
+// launchType=background keeps raycast in the background, the watcher process opens this url when the discord state changes
 const ensureExecutor = async (session: CdpSession, forceInject: boolean) => {
-  const watchedUrl = await session.evaluate("document.discordExecutor?.watchedUrl ?? null");
-  if (!forceInject && watchedUrl === refreshMenuUrl) {
+  const isWatching = await session.evaluate("document.discordExecutor?.watching === true");
+  if (!forceInject && isWatching) {
     return;
   }
   await session.evaluate(readInjectedBundle());
-  const watchMessage: DiscordMessage = { type: "watchState", notifyUrl: refreshMenuUrl };
+  const watchMessage: DiscordMessage = { type: "watchState" };
   await session.evaluate(`document.discordExecutor.run(${JSON.stringify(watchMessage)})`);
 };
 
@@ -86,6 +85,11 @@ const withDiscord = async <T>(action: (session: CdpSession) => Promise<T>, { for
   const session = await openSession(page.webSocketDebuggerUrl);
   try {
     await ensureExecutor(session, forceInject);
+    try {
+      ensureWatcherRunning(menuRefreshUrl);
+    } catch (error) {
+      console.error("Could not start the watcher", error);
+    }
     return await action(session);
   } finally {
     session.close();

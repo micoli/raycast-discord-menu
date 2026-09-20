@@ -1,7 +1,7 @@
 import child_process from "child_process";
 import { closeMainWindow, showHUD } from "@raycast/api";
 import waitPort from "wait-port";
-import { DEBUG_PORT } from "./util";
+import { DEBUG_PORT } from "./constants";
 
 export default async function Command() {
   const child = child_process.spawn(

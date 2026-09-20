@@ -3,8 +3,6 @@ import VoiceMembersSection from "./components/voice-members-section";
 import { menuIcon } from "./menu-icon";
 import { useDiscordState } from "./use-discord-state";
 
-const REFRESH_INTERVAL_MS = 2500;
-
 type MenuCommand = { title: string; icon: Icon; command: string };
 
 const voiceCommands: MenuCommand[] = [
@@ -25,7 +23,7 @@ const toggleAudioCommands: MenuCommand[] = [
 ];
 
 export default function Command() {
-  const { data, error, isLoading } = useDiscordState(REFRESH_INTERVAL_MS);
+  const { data, error, isLoading } = useDiscordState();
 
   const renderItem = ({ title, icon, command }: MenuCommand, type = LaunchType.Background) => (
     <MenuBarExtra.Item

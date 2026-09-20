@@ -3,7 +3,14 @@ import { readDiscordState } from "./discord-dom";
 const CHECK_THROTTLE_MS = 300;
 const MIN_NOTIFY_INTERVAL_MS = 1000;
 
-export const startStateWatcher = (notifyUrl: string) => {
+declare global {
+  interface Window {
+    // Binding installed by the external watcher through the devtools protocol, absent when nobody listens
+    notifyRaycast?: (payload: string) => void;
+  }
+}
+
+export const startStateWatcher = () => {
   let lastState = JSON.stringify(readDiscordState());
   let lastNotifiedAt = 0;
   let pendingCheck: ReturnType<typeof setTimeout> | undefined;
@@ -21,7 +28,7 @@ export const startStateWatcher = (notifyUrl: string) => {
     }
     lastState = current;
     lastNotifiedAt = Date.now();
-    window.open(notifyUrl);
+    window.notifyRaycast?.("stateChanged");
   };
 
   // Discord mutates the DOM constantly, so checks are throttled instead of debounced

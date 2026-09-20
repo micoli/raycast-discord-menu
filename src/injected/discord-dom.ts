@@ -50,7 +50,10 @@ const readChannelName = (channelItem: Element) => {
 const readMembers = (channelItem: Element) => {
   const members = new Map<string, { name: string; avatarUrl?: string }>();
   channelItem.querySelectorAll('[class*="voiceUser"]').forEach((voiceUser) => {
-    const name = voiceUser.querySelector('[role="button"][aria-label]')?.getAttribute("aria-label");
+    // The aria-label carries the state too ("name, Muet"), the username element does not
+    const name =
+      voiceUser.querySelector('[class*="username__"]')?.textContent?.trim() ||
+      voiceUser.querySelector('[role="button"][aria-label]')?.getAttribute("aria-label")?.split(",")[0];
     if (!name || members.has(name)) {
       return;
     }

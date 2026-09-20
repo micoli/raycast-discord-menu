@@ -12,7 +12,7 @@ import { waitFor } from "./robot";
 import { startStateWatcher } from "./state-watcher";
 
 export class DiscordExecutor {
-  watchedUrl: string | null = null;
+  watching = false;
   private stopWatching?: () => void;
 
   run(message: DiscordMessage) {
@@ -36,21 +36,21 @@ export class DiscordExecutor {
       case "getState":
         return readDiscordState();
       case "watchState":
-        return this.watchState(message.notifyUrl);
+        return this.watchState();
       default:
         throw new Error(`Unknown message ${JSON.stringify(message)}`);
     }
   }
 
-  watchState(notifyUrl: string) {
+  watchState() {
     this.stopWatching?.();
-    this.stopWatching = startStateWatcher(notifyUrl);
-    this.watchedUrl = notifyUrl;
+    this.stopWatching = startStateWatcher();
+    this.watching = true;
   }
 
   dispose() {
     this.stopWatching?.();
-    this.watchedUrl = null;
+    this.watching = false;
   }
 
   async startScreenShare(screenIndex: number) {

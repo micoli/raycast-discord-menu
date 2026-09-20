@@ -8,7 +8,7 @@ export type DiscordMessage =
   | { type: "deafen" }
   | { type: "undeafen" }
   | { type: "getState" }
-  | { type: "watchState"; notifyUrl: string };
+  | { type: "watchState" };
 
 export type VoiceMember = {
   name: string;
