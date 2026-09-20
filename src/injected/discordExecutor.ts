@@ -1,117 +1,81 @@
-import { waitForElm } from "./robot";
 import { discordSelectorLabels } from "./aria-labels";
+import {
+  dismissDialog,
+  findActionButton,
+  findByAriaLabel,
+  findScreenPickerTab,
+  findScreenPickerTile,
+  readConnectedVoiceChannel,
+} from "./discord-dom";
+import type { DiscordMessage } from "./messages";
+import { waitFor } from "./robot";
 
-const sleep = async (ms: number) => {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-};
+const SHARE_BUTTON_FALLBACK_INDEX = 1;
 
 export class DiscordExecutor {
-  dispatch: (_message: any, _log?: boolean) => {};
-
-  constructor(dispatch: any) {
-    this.dispatch = dispatch;
-  }
-
-  run(message: any) {
-    switch (message?.type) {
+  run(message: DiscordMessage) {
+    switch (message.type) {
       case "startScreenShare":
-        return this.startScreenShare(message?.screenIndex);
+        return this.startScreenShare(message.screenIndex ?? 1);
       case "stopScreenShare":
         return this.stopScreenShare();
       case "toggleMicrophone":
-        return this.toggleMicrophone();
+        return this.clickSwitch(discordSelectorLabels.mute);
       case "setMicrophoneOn":
-        return this.setMicrophoneOn();
+        return this.clickSwitch(discordSelectorLabels.mute, true);
       case "setMicrophoneOff":
-        return this.setMicrophoneOff();
+        return this.clickSwitch(discordSelectorLabels.mute, false);
       case "toggleSpeaker":
-        return this.toggleSpeaker();
+        return this.clickSwitch(discordSelectorLabels.noSpeaker);
       case "setSpeakerOn":
-        return this.setSpeakerOn();
+        return this.clickSwitch(discordSelectorLabels.noSpeaker, true);
       case "setSpeakerOff":
-        return this.setSpeakerOff();
+        return this.clickSwitch(discordSelectorLabels.noSpeaker, false);
+      case "getVoiceMembers":
+        return readConnectedVoiceChannel();
       default:
-        console.log(message);
+        throw new Error(`Unknown message ${JSON.stringify(message)}`);
     }
   }
 
   async startScreenShare(screenIndex: number) {
-    const shareButton = await waitForElm<HTMLButtonElement>(
-      document.body,
-      `[aria-label="${discordSelectorLabels.shareYourScreen}"]`,
-    );
+    const shareButton = findActionButton(discordSelectorLabels.shareYourScreen, SHARE_BUTTON_FALLBACK_INDEX);
+    if (!shareButton) {
+      throw new Error("Share button not found, is discord connected to a voice channel?");
+    }
+    if (shareButton.getAttribute("aria-pressed") === "true") {
+      return;
+    }
     shareButton.click();
 
-    const screenTabButton = await waitForElm<HTMLButtonElement>(
-      document.body,
-      'form div[role="button"][class^=tabItem]:nth-child(2)',
+    const screenTab = await waitFor(findScreenPickerTab, "screen picker tab");
+    screenTab.click();
+    await waitFor(
+      () => (screenTab.getAttribute("aria-selected") === "true" ? screenTab : null),
+      "screen tab selection",
     );
-    screenTabButton.click();
 
-    await sleep(500);
-    const screenDiv = await waitForElm<HTMLButtonElement>(
-      document.body,
-      `form div[class^="tile_"]:nth-of-type(${screenIndex}) div[class^="sourceThumbnail_"]:nth-child(1)`,
-    );
-    screenDiv.click();
-
-    const submitButton = await waitForElm<HTMLButtonElement>(document.body, "form button[type=submit]:enabled");
-    submitButton.click();
+    const tile = await waitFor(() => findScreenPickerTile(screenIndex), `screen ${screenIndex} tile`).catch(() => {
+      dismissDialog();
+      throw new Error(`Screen ${screenIndex} not available in the picker`);
+    });
+    tile.click();
   }
 
   async stopScreenShare() {
-    const stopShareButton = await waitForElm<HTMLButtonElement>(
-      document.body,
-      `[aria-label="${discordSelectorLabels.stopStreaming}"]`,
-    );
-    stopShareButton.click();
+    findByAriaLabel(discordSelectorLabels.stopStreaming)?.click();
   }
 
-  async toggleMicrophone() {
-    const microphoneButton = await waitForElm<HTMLButtonElement>(
-      document.body,
-      `[aria-label="${discordSelectorLabels.mute}"]`,
-    );
-    microphoneButton.click();
-  }
-
-  async setMicrophoneOn() {
-    const microphoneButton = await waitForElm<HTMLButtonElement>(
-      document.body,
-      `[aria-label="${discordSelectorLabels.mute}"][aria-checked=true]`,
-    );
-    microphoneButton.click();
-  }
-
-  async setMicrophoneOff() {
-    const microphoneButton = await waitForElm<HTMLButtonElement>(
-      document.body,
-      `[aria-label="${discordSelectorLabels.mute}"][aria-checked=false]`,
-    );
-    microphoneButton.click();
-  }
-
-  async toggleSpeaker() {
-    const speakerButton = await waitForElm<HTMLButtonElement>(
-      document.body,
-      `[aria-label="${discordSelectorLabels.noSpeaker}"]`,
-    );
-    speakerButton.click();
-  }
-
-  async setSpeakerOn() {
-    const speakerButton = await waitForElm<HTMLButtonElement>(
-      document.body,
-      `[aria-label="${discordSelectorLabels.noSpeaker}"][aria-checked=true]`,
-    );
-    speakerButton.click();
-  }
-
-  async setSpeakerOff() {
-    const speakerButton = await waitForElm<HTMLButtonElement>(
-      document.body,
-      `[aria-label="${discordSelectorLabels.noSpeaker}"][aria-checked=false]`,
-    );
-    speakerButton.click();
+  // For a switch, aria-checked=true means the feature is active (muted / deafened)
+  private clickSwitch(label: string, onlyWhenChecked?: boolean) {
+    const button = findByAriaLabel(label);
+    if (!button) {
+      throw new Error(`Button not found: ${label}`);
+    }
+    const isChecked = button.getAttribute("aria-checked") === "true";
+    if (onlyWhenChecked !== undefined && isChecked !== onlyWhenChecked) {
+      return;
+    }
+    button.click();
   }
 }

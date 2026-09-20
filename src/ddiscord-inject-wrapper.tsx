@@ -1,8 +1,11 @@
-import { debugWebsocketRequest } from "./util";
-import fs from "fs";
-import { closeMainWindow } from "@raycast/api";
+import { showHUD } from "@raycast/api";
+import { reinjectExecutor } from "./util";
 
 export default async function Command() {
-  await debugWebsocketRequest(5656, fs.readFileSync(__dirname + "/assets/discordExecutor.js").toString());
-  await closeMainWindow();
+  try {
+    await reinjectExecutor();
+    await showHUD("Discord wrapper injected");
+  } catch (error) {
+    await showHUD(`Discord: ${error instanceof Error ? error.message : String(error)}`);
+  }
 }

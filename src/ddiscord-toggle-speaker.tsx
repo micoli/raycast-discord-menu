@@ -1,7 +1,5 @@
-import { debugWebsocketRequest } from "./util";
-import { closeMainWindow } from "@raycast/api";
+import { runDiscordCommand } from "./util";
 
 export default async function Command() {
-  await debugWebsocketRequest(5656, 'document.discordExecutor.run({"type":"toggleSpeaker"});');
-  await closeMainWindow();
+  await runDiscordCommand({ type: "toggleSpeaker" });
 }

@@ -1,84 +1,98 @@
 import fetch from "node-fetch";
+import fs from "fs";
+import path from "path";
 import WebSocket from "ws";
-import { showToast, Toast } from "@raycast/api";
+import { closeMainWindow, environment, showHUD } from "@raycast/api";
+import type { DiscordMessage, VoiceChannelState } from "./injected/messages";
 
-let websocket: WebSocket | null = null;
+export const DEBUG_PORT = 5656;
 
-export async function debugWebsocketRequest(port: number, expression: string) {
-  if (websocket === null) {
-    try {
-      const response = await fetch(`http://127.0.0.1:${port}/json/list?t=123`);
-      const windows: { webSocketDebuggerUrl: string }[] = (await response.json()) as { webSocketDebuggerUrl: string }[];
-      websocket = new WebSocket(windows[0].webSocketDebuggerUrl);
-    } catch (e) {
-      try {
-        await showToast({
-          style: Toast.Style.Failure,
-          title: "Connection refused, Is discord launched? is wrapper injected ?",
-        });
-      } catch (error) {
-        console.log(error);
+type DebugTarget = { type: string; url: string; webSocketDebuggerUrl: string };
+
+type CdpSession = {
+  evaluate: (expression: string) => Promise<unknown>;
+  close: () => void;
+};
+
+const findDiscordPage = async () => {
+  const response = await fetch(`http://127.0.0.1:${DEBUG_PORT}/json/list`);
+  const targets = (await response.json()) as DebugTarget[];
+  return targets.find((target) => target.type === "page" && target.url.includes("discord.com"));
+};
+
+const openSession = (webSocketDebuggerUrl: string) =>
+  new Promise<CdpSession>((resolve, reject) => {
+    const socket = new WebSocket(webSocketDebuggerUrl);
+    const pending = new Map<number, { resolve: (value: unknown) => void; reject: (error: Error) => void }>();
+    let nextId = 1;
+
+    socket.on("error", reject);
+    socket.on("message", (data) => {
+      const response = JSON.parse(data.toString());
+      const request = pending.get(response.id);
+      if (!request) {
+        return;
       }
-      return;
-    }
+      pending.delete(response.id);
+      if (response.error) {
+        return request.reject(new Error(response.error.message));
+      }
+      const { result, exceptionDetails } = response.result;
+      if (exceptionDetails) {
+        return request.reject(new Error(exceptionDetails.exception?.description ?? exceptionDetails.text));
+      }
+      request.resolve(result.value);
+    });
+    socket.on("open", () =>
+      resolve({
+        close: () => socket.close(),
+        evaluate: (expression) =>
+          new Promise((resolveEvaluate, rejectEvaluate) => {
+            const id = nextId++;
+            pending.set(id, { resolve: resolveEvaluate, reject: rejectEvaluate });
+            socket.send(
+              JSON.stringify({
+                id,
+                method: "Runtime.evaluate",
+                params: { expression, awaitPromise: true, returnByValue: true, userGesture: true },
+              }),
+            );
+          }),
+      }),
+    );
+  });
+
+const readInjectedBundle = () => fs.readFileSync(path.join(environment.assetsPath, "discordExecutor.js"), "utf8");
+
+const withDiscord = async <T>(action: (session: CdpSession) => Promise<T>, { forceInject = false } = {}) => {
+  const page = await findDiscordPage().catch(() => undefined);
+  if (!page) {
+    throw new Error("Discord not reachable, is it launched with remote debugging?");
   }
-  return new Promise((resolve) => {
-    websocket!.on("error", console.error);
-    websocket!.on("close", () => {
-      console.log("closed");
-      websocket = null;
-    });
+  const session = await openSession(page.webSocketDebuggerUrl);
+  try {
+    const isInjected = await session.evaluate("typeof document.discordExecutor !== 'undefined'");
+    if (forceInject || !isInjected) {
+      await session.evaluate(readInjectedBundle());
+    }
+    return await action(session);
+  } finally {
+    session.close();
+  }
+};
 
-    websocket!.on("open", () => {
-      console.log(expression);
-      websocket!.send(inject(expression));
-    });
+export const sendDiscordMessage = <T = unknown>(message: DiscordMessage) =>
+  withDiscord((session) => session.evaluate(`document.discordExecutor.run(${JSON.stringify(message)})`) as Promise<T>);
 
-    websocket!.on("message", (data: string) => {
-      console.log(data.toString());
-      resolve(data.toString());
-    });
-  });
-}
+export const reinjectExecutor = () => withDiscord(async () => undefined, { forceInject: true });
 
-// def is_script_injected(debugger_port: int, class_name: str):
-// return evaluate_script(debugger_port, class_name)['result']['className'] != "ReferenceError"
-//
-//
-// def inject_script(debugger_port: int):
-// if is_script_injected(debugger_port, 'discordRemoteInjected'):
-// logging.error('Script is already injected')
-// return
-// logging.info('Script will be injected')
-// assets_full_path = get_assets_full_path('index.ts')
-// if assets_full_path is None:
-//   print("assets_full_path is null")
-// return
-// with open(assets_full_path, "r") as file:
-// response = evaluate_script(debugger_port, file.read())
-// print(json.dumps(response, indent=2))
-//
-//
-// def discord_command(message):
-// json_message = json.dumps(message._asdict())
-// command = f'document.discordExecutor.run({json_message})'
-// devtools_command(command)
+export const getVoiceChannelState = () => sendDiscordMessage<VoiceChannelState | null>({ type: "getVoiceMembers" });
 
-function inject(expression: string) {
-  return JSON.stringify({
-    id: 1,
-    method: "Runtime.evaluate",
-    params: {
-      contextId: 1,
-      doNotPauseOnExceptionsAndMuteConsole: false,
-      expression: expression,
-      generatePreview: false,
-      returnByValue: false,
-      objectGroup: "inject",
-      includeCommandLineAPI: true,
-      silent: true,
-      userGesture: true,
-      awaitPromise: true,
-    },
-  });
-}
+export const runDiscordCommand = async (message: DiscordMessage) => {
+  try {
+    await sendDiscordMessage(message);
+  } catch (error) {
+    return showHUD(`Discord: ${error instanceof Error ? error.message : String(error)}`);
+  }
+  await closeMainWindow();
+};

@@ -1,5 +1,5 @@
 import { runDiscordCommand } from "./util";
 
 export default async function Command() {
-  await runDiscordCommand({ type: "stopScreenShare" });
+  await runDiscordCommand({ type: "toggleMicrophone" });
 }

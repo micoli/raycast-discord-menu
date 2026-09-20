@@ -1,53 +1,42 @@
 import { Icon, launchCommand, LaunchType, MenuBarExtra } from "@raycast/api";
 
+type MenuCommand = { title: string; icon: Icon; command: string };
+
+const voiceCommands: MenuCommand[] = [
+  { title: "Stream screen 1", icon: Icon.Number01, command: "ddiscord-stream-screen-1" },
+  { title: "Stream screen 2", icon: Icon.Number02, command: "ddiscord-stream-screen-2" },
+  { title: "Stop Stream", icon: Icon.Stop, command: "ddiscord-stop-stream" },
+];
+
+const audioCommands: MenuCommand[] = [
+  { title: "Toggle Microphone", icon: Icon.Microphone, command: "ddiscord-toggle-microphone" },
+  { title: "Toggle Speaker", icon: Icon.Speaker, command: "ddiscord-toggle-speaker" },
+];
+
 export default function Command() {
+  const renderItem = ({ title, icon, command }: MenuCommand, type = LaunchType.Background) => (
+    <MenuBarExtra.Item
+      key={command}
+      title={title}
+      icon={icon}
+      onAction={() => launchCommand({ name: command, type })}
+    />
+  );
+
   return (
     <MenuBarExtra icon="../assets/discord_1.png" tooltip="Discord helper">
-      <MenuBarExtra.Item
-        title="Stream screen 1"
-        icon={Icon.Number01}
-        onAction={async () => {
-          await launchCommand({ name: "ddiscord-stream-screen-1", type: LaunchType.Background });
-        }}
-      />
-      <MenuBarExtra.Item
-        title="Stream screen 2"
-        icon={Icon.Number02}
-        onAction={async () => {
-          await launchCommand({ name: "ddiscord-stream-screen-2", type: LaunchType.Background });
-        }}
-      />
-      <MenuBarExtra.Item
-        title="Stop Stream"
-        icon={Icon.Stop}
-        onAction={async () => {
-          await launchCommand({ name: "ddiscord-stop-stream", type: LaunchType.Background });
-        }}
-      />
+      {voiceCommands.map((item) => renderItem(item))}
       <MenuBarExtra.Separator />
-      <MenuBarExtra.Item
-        title="Toggle Speaker"
-        icon={Icon.Speaker}
-        onAction={async () => {
-          await launchCommand({ name: "ddiscord-toggle-speaker", type: LaunchType.Background });
-        }}
-      />
+      {audioCommands.map((item) => renderItem(item))}
       <MenuBarExtra.Separator />
-      <MenuBarExtra.Item
-        title="Launch discord"
-        icon={Icon.AppWindow}
-        onAction={async () => {
-          await launchCommand({ name: "ddiscord-launch-discord", type: LaunchType.Background });
-        }}
-      />
-      <MenuBarExtra.Submenu title={"Debug"}>
-        <MenuBarExtra.Item
-          title="Inject discord wrapper"
-          icon={Icon.Envelope}
-          onAction={async () => {
-            await launchCommand({ name: "ddiscord-inject-wrapper", type: LaunchType.Background });
-          }}
-        />
+      {renderItem(
+        { title: "Voice members", icon: Icon.TwoPeople, command: "ddiscord-voice-members" },
+        LaunchType.UserInitiated,
+      )}
+      <MenuBarExtra.Separator />
+      {renderItem({ title: "Launch discord", icon: Icon.AppWindow, command: "ddiscord-launch-discord" })}
+      <MenuBarExtra.Submenu title="Debug">
+        {renderItem({ title: "Inject discord wrapper", icon: Icon.Envelope, command: "ddiscord-inject-wrapper" })}
       </MenuBarExtra.Submenu>
     </MenuBarExtra>
   );

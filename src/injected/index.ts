@@ -6,15 +6,4 @@ declare global {
   }
 }
 
-(() => {
-  const dispatch = (message: string, log = true) => {
-    try {
-      if (log) {
-        console.log("dispatch", JSON.stringify(message));
-      }
-    } catch (error) {
-      console.log("dispatch error", error);
-    }
-  };
-  document.discordExecutor = new DiscordExecutor(dispatch);
-})();
+document.discordExecutor = new DiscordExecutor();

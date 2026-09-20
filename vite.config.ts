@@ -19,7 +19,8 @@ export default defineConfig({
       },
       output: {
         dir: 'assets/',
-        entryFileNames: 'discordExecutor.js'
+        entryFileNames: 'discordExecutor.js',
+        format: 'iife',
       },
     },
   },

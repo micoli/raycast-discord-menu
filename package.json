@@ -44,6 +44,18 @@
       "mode": "no-view"
     },
     {
+      "name": "ddiscord-toggle-microphone",
+      "title": "Toggle Microphone",
+      "description": "Toggle microphone mute",
+      "keywords": [
+        "discord",
+        "toggle",
+        "microphone",
+        "mute"
+      ],
+      "mode": "no-view"
+    },
+    {
       "name": "ddiscord-toggle-speaker",
       "title": "Toggle Speaker",
       "description": "Toggle speaker",
@@ -53,6 +65,18 @@
         "speaker"
       ],
       "mode": "no-view"
+    },
+    {
+      "name": "ddiscord-voice-members",
+      "title": "Voice Members",
+      "description": "Who is connected in the current voice channel",
+      "keywords": [
+        "discord",
+        "voice",
+        "members",
+        "who"
+      ],
+      "mode": "view"
     },
     {
       "name": "ddiscord-launch-discord",
