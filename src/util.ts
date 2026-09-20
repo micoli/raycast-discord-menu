@@ -14,6 +14,8 @@ type CdpSession = {
   close: () => void;
 };
 
+export const isDebuggerReachable = () => findDiscordPage().then(Boolean, () => false);
+
 const findDiscordPage = async () => {
   const response = await fetch(`http://127.0.0.1:${DEBUG_PORT}/json/list`);
   const targets = (await response.json()) as DebugTarget[];
@@ -71,11 +73,11 @@ const bundleVersion = () => String(fs.statSync(injectedBundlePath()).mtimeMs);
 const menuRefreshUrl = `raycast://extensions/${environment.ownerOrAuthorName}/${environment.extensionName}/ddiscord-menu?launchType=background`;
 
 // launchType=background keeps raycast in the background, the watcher process opens this url when the discord state changes
-const ensureExecutor = async (session: CdpSession, forceInject: boolean) => {
+const ensureExecutor = async (session: CdpSession) => {
   const version = bundleVersion();
   const injectedVersion = await session.evaluate("document.discordExecutor?.bundleVersion ?? null");
   const isWatching = await session.evaluate("document.discordExecutor?.watching === true");
-  if (!forceInject && isWatching && injectedVersion === version) {
+  if (isWatching && injectedVersion === version) {
     return;
   }
   await session.evaluate(readInjectedBundle());
@@ -85,14 +87,14 @@ const ensureExecutor = async (session: CdpSession, forceInject: boolean) => {
   );
 };
 
-const withDiscord = async <T>(action: (session: CdpSession) => Promise<T>, { forceInject = false } = {}) => {
+const withDiscord = async <T>(action: (session: CdpSession) => Promise<T>) => {
   const page = await findDiscordPage().catch(() => undefined);
   if (!page) {
     throw new Error("Discord not reachable, is it launched with remote debugging?");
   }
   const session = await openSession(page.webSocketDebuggerUrl);
   try {
-    await ensureExecutor(session, forceInject);
+    await ensureExecutor(session);
     try {
       ensureWatcherRunning(menuRefreshUrl);
     } catch (error) {
@@ -106,8 +108,6 @@ const withDiscord = async <T>(action: (session: CdpSession) => Promise<T>, { for
 
 export const sendDiscordMessage = <T = unknown>(message: DiscordMessage) =>
   withDiscord((session) => session.evaluate(`document.discordExecutor.run(${JSON.stringify(message)})`) as Promise<T>);
-
-export const reinjectExecutor = () => withDiscord(async () => undefined, { forceInject: true });
 
 export const getDiscordState = () => sendDiscordMessage<DiscordState>({ type: "getState" });
 

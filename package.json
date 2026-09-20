@@ -127,7 +127,7 @@
     {
       "name": "ddiscord-launch-discord",
       "title": "Launch Discord",
-      "description": "launch discord with remote debugging",
+      "description": "Launch discord with remote debugging (relaunches it if it runs without)",
       "keywords": [
         "discord",
         "launch",
@@ -136,12 +136,14 @@
       "mode": "no-view"
     },
     {
-      "name": "ddiscord-inject-wrapper",
-      "title": "Discord Inject Wrapper",
-      "description": "Inject wrapper in discord instance",
+      "name": "ddiscord-stop-discord",
+      "title": "Stop Discord",
+      "description": "Quit discord",
       "keywords": [
         "discord",
-        "inject"
+        "stop",
+        "quit",
+        "kill"
       ],
       "mode": "no-view"
     },

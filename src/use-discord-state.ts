@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useState } from "react";
 import { Cache } from "@raycast/api";
 import type { DiscordState } from "./injected/messages";
+import { isDiscordRunning } from "./discord-process";
 import { getDiscordState } from "./util";
 
-type Snapshot = { data?: DiscordState; error?: string };
+type Snapshot = { data?: DiscordState; error?: string; running?: boolean };
 
 const CACHE_KEY = "discord-state";
 const cache = new Cache();
@@ -15,11 +16,16 @@ const readCachedSnapshot = (): Snapshot => {
   return cached ? (JSON.parse(cached) as Snapshot) : {};
 };
 
-const takeSnapshot = (): Promise<Snapshot> =>
-  getDiscordState().then(
-    (data) => ({ data }),
-    (error) => ({ error: error instanceof Error ? error.message : String(error) }),
-  );
+const takeSnapshot = async (): Promise<Snapshot> => {
+  const [state, running] = await Promise.all([
+    getDiscordState().then(
+      (data) => ({ data }),
+      (error) => ({ error: error instanceof Error ? error.message : String(error) }),
+    ),
+    isDiscordRunning(),
+  ]);
+  return { ...state, running };
+};
 
 // Without intervalMs the state is read once: a polling loop keeps the command alive and closes the menu bar menu when it is opened
 export function useDiscordState(intervalMs?: number) {
