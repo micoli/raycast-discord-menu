@@ -64,6 +64,19 @@ const openSession = (webSocketDebuggerUrl: string) =>
 
 const readInjectedBundle = () => fs.readFileSync(path.join(environment.assetsPath, "discordExecutor.js"), "utf8");
 
+const refreshMenuUrl = `raycast://extensions/${environment.ownerOrAuthorName}/${environment.extensionName}/ddiscord-refresh-menu`;
+
+// The executor tells raycast to refresh the menu bar (through this url) whenever the discord state changes
+const ensureExecutor = async (session: CdpSession, forceInject: boolean) => {
+  const watchedUrl = await session.evaluate("document.discordExecutor?.watchedUrl ?? null");
+  if (!forceInject && watchedUrl === refreshMenuUrl) {
+    return;
+  }
+  await session.evaluate(readInjectedBundle());
+  const watchMessage: DiscordMessage = { type: "watchState", notifyUrl: refreshMenuUrl };
+  await session.evaluate(`document.discordExecutor.run(${JSON.stringify(watchMessage)})`);
+};
+
 const withDiscord = async <T>(action: (session: CdpSession) => Promise<T>, { forceInject = false } = {}) => {
   const page = await findDiscordPage().catch(() => undefined);
   if (!page) {
@@ -71,10 +84,7 @@ const withDiscord = async <T>(action: (session: CdpSession) => Promise<T>, { for
   }
   const session = await openSession(page.webSocketDebuggerUrl);
   try {
-    const isInjected = await session.evaluate("typeof document.discordExecutor !== 'undefined'");
-    if (forceInject || !isInjected) {
-      await session.evaluate(readInjectedBundle());
-    }
+    await ensureExecutor(session, forceInject);
     return await action(session);
   } finally {
     session.close();

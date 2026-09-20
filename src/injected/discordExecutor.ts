@@ -9,8 +9,12 @@ import {
 } from "./discord-dom";
 import type { DiscordMessage } from "./messages";
 import { waitFor } from "./robot";
+import { startStateWatcher } from "./state-watcher";
 
 export class DiscordExecutor {
+  watchedUrl: string | null = null;
+  private stopWatching?: () => void;
+
   run(message: DiscordMessage) {
     switch (message.type) {
       case "startScreenShare":
@@ -31,9 +35,22 @@ export class DiscordExecutor {
         return this.clickSwitch(discordSelectorLabels.noSpeaker, true);
       case "getState":
         return readDiscordState();
+      case "watchState":
+        return this.watchState(message.notifyUrl);
       default:
         throw new Error(`Unknown message ${JSON.stringify(message)}`);
     }
+  }
+
+  watchState(notifyUrl: string) {
+    this.stopWatching?.();
+    this.stopWatching = startStateWatcher(notifyUrl);
+    this.watchedUrl = notifyUrl;
+  }
+
+  dispose() {
+    this.stopWatching?.();
+    this.watchedUrl = null;
   }
 
   async startScreenShare(screenIndex: number) {

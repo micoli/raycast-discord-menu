@@ -24,6 +24,8 @@ export function useDiscordState(intervalMs: number) {
   useEffect(() => {
     let stopped = false;
     const loop = async () => {
+      // React strict mode mounts, unmounts and remounts effects: yielding first lets the discarded run stop before fetching
+      await Promise.resolve();
       while (!stopped) {
         await refresh();
         await sleep(intervalMs);

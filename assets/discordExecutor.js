@@ -1,5 +1,9 @@
+var __defProp = Object.defineProperty;
+var __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value }) : obj[key] = value;
+var __publicField = (obj, key, value) => __defNormalProp(obj, typeof key !== "symbol" ? key + "" : key, value);
 (function() {
   "use strict";
+  var _a, _b;
   const discordSelectorLabels = {
     stopStreaming: "Arrêter de streamer",
     shareYourScreen: "Partage ton écran",
@@ -12,9 +16,9 @@
   const findActionButton = (tooltipLabel, fallbackIndex) => {
     const buttons = Array.from(document.querySelectorAll('[class*="actionButtons_"] > button'));
     const byTooltip = buttons.find((button) => {
-      var _a;
+      var _a2;
       const tooltipId = button.getAttribute("aria-describedby");
-      return tooltipId && ((_a = document.getElementById(tooltipId)) == null ? void 0 : _a.textContent) === tooltipLabel;
+      return tooltipId && ((_a2 = document.getElementById(tooltipId)) == null ? void 0 : _a2.textContent) === tooltipLabel;
     });
     return byTooltip ?? buttons[fallbackIndex] ?? null;
   };
@@ -36,23 +40,23 @@
   };
   const isConnectedToVoice = () => document.querySelector('[class*="actionButtons_"]') !== null;
   const currentUserName = () => {
-    var _a, _b;
-    return (_b = (_a = document.querySelector('[class*="panels_"] [class*="nameTag_"] [class*="title_"]')) == null ? void 0 : _a.textContent) == null ? void 0 : _b.trim();
+    var _a2, _b2;
+    return (_b2 = (_a2 = document.querySelector('[class*="panels_"] [class*="nameTag_"] [class*="title_"]')) == null ? void 0 : _a2.textContent) == null ? void 0 : _b2.trim();
   };
   const readChannelName = (channelItem) => {
-    var _a;
-    const label = (_a = channelItem.querySelector('a[data-list-item-id^="channels___"]')) == null ? void 0 : _a.getAttribute("aria-label");
+    var _a2;
+    const label = (_a2 = channelItem.querySelector('a[data-list-item-id^="channels___"]')) == null ? void 0 : _a2.getAttribute("aria-label");
     return label == null ? void 0 : label.split(",")[0].replace(/\s*\([^)]*\)$/, "");
   };
   const readMembers = (channelItem) => {
     const members = /* @__PURE__ */ new Map();
     channelItem.querySelectorAll('[class*="voiceUser"]').forEach((voiceUser) => {
-      var _a, _b, _c;
-      const name = (_a = voiceUser.querySelector('[role="button"][aria-label]')) == null ? void 0 : _a.getAttribute("aria-label");
+      var _a2, _b2, _c;
+      const name = (_a2 = voiceUser.querySelector('[role="button"][aria-label]')) == null ? void 0 : _a2.getAttribute("aria-label");
       if (!name || members.has(name)) {
         return;
       }
-      const avatarStyle = (_b = voiceUser.querySelector('[class*="avatar"]')) == null ? void 0 : _b.style.backgroundImage;
+      const avatarStyle = (_b2 = voiceUser.querySelector('[class*="avatar"]')) == null ? void 0 : _b2.style.backgroundImage;
       members.set(name, { name, avatarUrl: (_c = avatarStyle == null ? void 0 : avatarStyle.match(/url\("?([^")]+)/)) == null ? void 0 : _c[1] });
     });
     return Array.from(members.values());
@@ -70,15 +74,15 @@
     return channelsWithMembers.length === 1 ? channelsWithMembers[0] : null;
   };
   const isSwitchChecked = (label) => {
-    var _a;
-    return ((_a = findByAriaLabel(label)) == null ? void 0 : _a.getAttribute("aria-checked")) === "true";
+    var _a2;
+    return ((_a2 = findByAriaLabel(label)) == null ? void 0 : _a2.getAttribute("aria-checked")) === "true";
   };
   const readDiscordState = () => {
-    var _a;
+    var _a2;
     return {
       muted: isSwitchChecked(discordSelectorLabels.mute),
       deafened: isSwitchChecked(discordSelectorLabels.noSpeaker),
-      sharing: ((_a = findShareButton()) == null ? void 0 : _a.getAttribute("aria-pressed")) === "true",
+      sharing: ((_a2 = findShareButton()) == null ? void 0 : _a2.getAttribute("aria-pressed")) === "true",
       voice: readConnectedVoiceChannel()
     };
   };
@@ -104,7 +108,46 @@
       observer.observe(document.body, { childList: true, subtree: true });
     });
   };
+  const CHECK_THROTTLE_MS = 300;
+  const MIN_NOTIFY_INTERVAL_MS = 1e3;
+  const startStateWatcher = (notifyUrl) => {
+    let lastState = JSON.stringify(readDiscordState());
+    let lastNotifiedAt = 0;
+    let pendingCheck;
+    const check = () => {
+      pendingCheck = void 0;
+      const current = JSON.stringify(readDiscordState());
+      if (current === lastState) {
+        return;
+      }
+      const sinceLastNotification = Date.now() - lastNotifiedAt;
+      if (sinceLastNotification < MIN_NOTIFY_INTERVAL_MS) {
+        pendingCheck = setTimeout(check, MIN_NOTIFY_INTERVAL_MS - sinceLastNotification);
+        return;
+      }
+      lastState = current;
+      lastNotifiedAt = Date.now();
+      window.open(notifyUrl);
+    };
+    const observer = new MutationObserver(() => {
+      pendingCheck ?? (pendingCheck = setTimeout(check, CHECK_THROTTLE_MS));
+    });
+    observer.observe(document.body, {
+      subtree: true,
+      childList: true,
+      attributes: true,
+      attributeFilter: ["aria-checked", "aria-pressed"]
+    });
+    return () => {
+      observer.disconnect();
+      clearTimeout(pendingCheck);
+    };
+  };
   class DiscordExecutor {
+    constructor() {
+      __publicField(this, "watchedUrl", null);
+      __publicField(this, "stopWatching");
+    }
     run(message) {
       switch (message.type) {
         case "startScreenShare":
@@ -125,9 +168,22 @@
           return this.clickSwitch(discordSelectorLabels.noSpeaker, true);
         case "getState":
           return readDiscordState();
+        case "watchState":
+          return this.watchState(message.notifyUrl);
         default:
           throw new Error(`Unknown message ${JSON.stringify(message)}`);
       }
+    }
+    watchState(notifyUrl) {
+      var _a2;
+      (_a2 = this.stopWatching) == null ? void 0 : _a2.call(this);
+      this.stopWatching = startStateWatcher(notifyUrl);
+      this.watchedUrl = notifyUrl;
+    }
+    dispose() {
+      var _a2;
+      (_a2 = this.stopWatching) == null ? void 0 : _a2.call(this);
+      this.watchedUrl = null;
     }
     async startScreenShare(screenIndex) {
       const shareButton = findShareButton();
@@ -151,8 +207,8 @@
       tile.click();
     }
     async stopScreenShare() {
-      var _a;
-      (_a = findByAriaLabel(discordSelectorLabels.stopStreaming)) == null ? void 0 : _a.click();
+      var _a2;
+      (_a2 = findByAriaLabel(discordSelectorLabels.stopStreaming)) == null ? void 0 : _a2.click();
     }
     // aria-checked=true means muted / deafened. With requiredState, click only if the switch is currently in that state
     clickSwitch(label, requiredState) {
@@ -167,5 +223,6 @@
       button.click();
     }
   }
+  (_b = (_a = document.discordExecutor) == null ? void 0 : _a.dispose) == null ? void 0 : _b.call(_a);
   document.discordExecutor = new DiscordExecutor();
 })();
