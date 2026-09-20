@@ -164,12 +164,15 @@
   },
   "devDependencies": {
     "@raycast/eslint-config": "^1.0.11",
+    "@types/jsdom": "^30.0.0",
     "@types/node": "20.8.10",
     "@types/react": "18.3.3",
     "@types/ws": "^8.5.12",
     "eslint": "^8.57.0",
+    "jsdom": "^25.0.1",
     "prettier": "^3.3.3",
     "typescript": "^5.4.5",
+    "vitest": "^2.1.9",
     "wait-port": "^1.1.0"
   },
   "scripts": {
@@ -182,6 +185,9 @@
     "build-inject": "vite build && npm run build-watcher",
     "watch-inject": "vite build --watch",
     "build-icons": "node scripts/build-menu-icons.mjs",
-    "build-watcher": "esbuild src/watcher/index.ts --bundle --platform=node --format=cjs --target=node22 --outfile=assets/discord-watcher.js"
+    "build-watcher": "esbuild src/watcher/index.ts --bundle --platform=node --format=cjs --target=node22 --outfile=assets/discord-watcher.js",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit"
   }
 }

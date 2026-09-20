@@ -17,7 +17,8 @@ type CdpSession = {
 export const isDebuggerReachable = () => findDiscordPage().then(Boolean, () => false);
 
 const findDiscordPage = async () => {
-  const response = await fetch(`http://127.0.0.1:${DEBUG_PORT}/json/list`);
+  // No keep-alive: a pooled connection to a discord that restarted would fail the next request
+  const response = await fetch(`http://127.0.0.1:${DEBUG_PORT}/json/list`, { headers: { connection: "close" } });
   const targets = (await response.json()) as DebugTarget[];
   return targets.find((target) => target.type === "page" && target.url.includes("discord.com"));
 };

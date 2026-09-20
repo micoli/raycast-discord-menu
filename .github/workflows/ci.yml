@@ -1,0 +1,38 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  check:
+    # The raycast cli only ships a macOS binary
+    runs-on: macos-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Types
+        run: npm run typecheck
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Tests
+        run: npm test
+
+      - name: The committed bundles are up to date
+        run: |
+          npm run build-inject
+          git diff --exit-code -- assets/discordExecutor.js assets/discord-watcher.js
+
+      - name: The extension builds
+        run: npx ray build -e "$RUNNER_TEMP/dist"

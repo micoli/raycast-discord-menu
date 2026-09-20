@@ -1,5 +1,7 @@
 # Raycast Discord commands and menu bar
 
+[![CI](https://github.com/micoli/raycast-discord-menu/actions/workflows/ci.yml/badge.svg)](https://github.com/micoli/raycast-discord-menu/actions/workflows/ci.yml)
+
 Control the Discord desktop app from Raycast: share one of your screens, mute / deafen, see who is in your voice
 channel, launch or stop Discord. A menu bar item shows the live state of your voice session in its icon.
 
@@ -114,6 +116,8 @@ Detached watcher process ◀── devtools binding ◀── the script reports
 | `npm run build-inject`              | Build `assets/discordExecutor.js` (vite) and `assets/discord-watcher.js` (esbuild)                                                     |
 | `npm run build-icons`               | Regenerate the menu bar icons in `assets/menu-icons` (needs `rsvg-convert`, `brew install librsvg`, `STROKE_WIDTH` sets the thickness) |
 | `npm run lint` / `npm run fix-lint` | Lint the extension                                                                                                                     |
+| `npm run typecheck`                 | Type check the sources and the tests                                                                                                   |
+| `npm test` / `npm run test:watch`   | Run the tests once / on every change                                                                                                   |
 
 The compiled bundles and the icons are committed, rebuild them after changing `src/injected/`, `src/watcher/` or
 `scripts/build-menu-icons.mjs`.
@@ -125,6 +129,22 @@ Things worth knowing:
   (labels). The class names are hashed, so the selectors rely on stable prefixes, ARIA attributes and tooltips.
 - Raycast never unmounts menu bar commands: a polling loop in the menu would live forever. The menu reads the state once
   and the watcher pushes the changes.
+
+## Tests and CI
+
+`npm test` runs [Vitest](https://vitest.dev) without Raycast nor Discord:
+
+- **The injected script** runs in jsdom against a fake Discord (`tests/fixtures/fake-discord.ts`) that reproduces the
+  DOM the extension relies on and reacts to clicks like Discord: state reading, mute, deafen, screen share, member
+  list, the state watcher. When Discord changes its DOM, update the fake and the tests tell what to fix in the script.
+- **The devtools client** (`src/util.ts`) talks to a fake devtools server: injection, versioning, errors.
+- **The watcher process** is the built `assets/discord-watcher.js`, started for real against a fake Discord and a fake
+  `open` command.
+- The menu icon names match the PNG files of `assets/menu-icons`.
+
+The GitHub Actions workflow (`.github/workflows/ci.yml`) runs on macOS, the only platform of the Raycast CLI: types,
+lint, tests, a check that the committed bundles match their sources (run `npm run build-inject` when it fails) and
+`ray build`.
 
 ## Troubleshooting
 
