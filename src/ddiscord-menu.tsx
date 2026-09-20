@@ -1,9 +1,16 @@
 import { Icon, launchCommand, LaunchType, MenuBarExtra } from "@raycast/api";
 import VoiceMembersSection from "./components/voice-members-section";
+import type { DiscordState } from "./injected/messages";
 import { menuIcon } from "./menu-icon";
 import { useDiscordState } from "./use-discord-state";
 
-type MenuCommand = { title: string; icon: Icon; command: string };
+type MenuCommand = {
+  title: string;
+  icon: Icon;
+  command: string;
+  // Commands depending on the discord state are disabled while it is unknown
+  isEnabled?: (state: DiscordState) => boolean;
+};
 
 const voiceCommands: MenuCommand[] = [
   { title: "Stream screen 1", icon: Icon.Number01, command: "ddiscord-stream-screen-1" },
@@ -12,10 +19,10 @@ const voiceCommands: MenuCommand[] = [
 ];
 
 const audioCommands: MenuCommand[] = [
-  { title: "Mute", icon: Icon.MicrophoneDisabled, command: "ddiscord-mute" },
-  { title: "Unmute", icon: Icon.Microphone, command: "ddiscord-unmute" },
-  { title: "Deafen", icon: Icon.SpeakerOff, command: "ddiscord-deafen" },
-  { title: "Undeafen", icon: Icon.Speaker, command: "ddiscord-undeafen" },
+  { title: "Mute", icon: Icon.MicrophoneDisabled, command: "ddiscord-mute", isEnabled: (state) => !state.muted },
+  { title: "Unmute", icon: Icon.Microphone, command: "ddiscord-unmute", isEnabled: (state) => state.muted },
+  { title: "Deafen", icon: Icon.SpeakerOff, command: "ddiscord-deafen", isEnabled: (state) => !state.deafened },
+  { title: "Undeafen", icon: Icon.Speaker, command: "ddiscord-undeafen", isEnabled: (state) => state.deafened },
 ];
 const toggleAudioCommands: MenuCommand[] = [
   { title: "Toggle Microphone", icon: Icon.Microphone, command: "ddiscord-toggle-microphone" },
@@ -25,14 +32,18 @@ const toggleAudioCommands: MenuCommand[] = [
 export default function Command() {
   const { data, error, isLoading } = useDiscordState();
 
-  const renderItem = ({ title, icon, command }: MenuCommand, type = LaunchType.Background) => (
-    <MenuBarExtra.Item
-      key={command}
-      title={title}
-      icon={icon}
-      onAction={() => launchCommand({ name: command, type })}
-    />
-  );
+  // An item without onAction is rendered disabled by raycast
+  const renderItem = ({ title, icon, command, isEnabled }: MenuCommand, type = LaunchType.Background) => {
+    const enabled = !isEnabled || Boolean(data && !error && isEnabled(data));
+    return (
+      <MenuBarExtra.Item
+        key={command}
+        title={title}
+        icon={icon}
+        onAction={enabled ? () => launchCommand({ name: command, type }) : undefined}
+      />
+    );
+  };
 
   return (
     <MenuBarExtra isLoading={isLoading} icon={menuIcon(error ? undefined : data)} tooltip="Discord helper">
