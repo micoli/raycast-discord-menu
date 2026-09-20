@@ -107,13 +107,13 @@ Detached watcher process ◀── devtools binding ◀── the script reports
 
 ## Development
 
-| Script                              | Description                                                                                         |
-| ----------------------------------- | --------------------------------------------------------------------------------------------------- |
-| `npm run dev`                       | Build the injected script and the watcher, then start `ray develop`                                 |
-| `npm run build`                     | Same, then `ray build`                                                                              |
-| `npm run build-inject`              | Build `assets/discordExecutor.js` (vite) and `assets/discord-watcher.js` (esbuild)                  |
-| `npm run build-icons`               | Regenerate the menu bar icons in `assets/menu-icons` (needs `rsvg-convert`, `brew install librsvg`) |
-| `npm run lint` / `npm run fix-lint` | Lint the extension                                                                                  |
+| Script                              | Description                                                                                                                            |
+| ----------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| `npm run dev`                       | Build the injected script and the watcher, then start `ray develop`                                                                    |
+| `npm run build`                     | Same, then `ray build`                                                                                                                 |
+| `npm run build-inject`              | Build `assets/discordExecutor.js` (vite) and `assets/discord-watcher.js` (esbuild)                                                     |
+| `npm run build-icons`               | Regenerate the menu bar icons in `assets/menu-icons` (needs `rsvg-convert`, `brew install librsvg`, `STROKE_WIDTH` sets the thickness) |
+| `npm run lint` / `npm run fix-lint` | Lint the extension                                                                                                                     |
 
 The compiled bundles and the icons are committed, rebuild them after changing `src/injected/`, `src/watcher/` or
 `scripts/build-menu-icons.mjs`.
