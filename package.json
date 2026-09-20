@@ -67,6 +67,52 @@
       "mode": "no-view"
     },
     {
+      "name": "ddiscord-mute",
+      "title": "Mute Microphone",
+      "description": "Mute microphone (no-op if already muted)",
+      "keywords": [
+        "discord",
+        "mute",
+        "microphone"
+      ],
+      "mode": "no-view"
+    },
+    {
+      "name": "ddiscord-unmute",
+      "title": "Unmute Microphone",
+      "description": "Unmute microphone (no-op if already unmuted)",
+      "keywords": [
+        "discord",
+        "unmute",
+        "microphone"
+      ],
+      "mode": "no-view"
+    },
+    {
+      "name": "ddiscord-deafen",
+      "title": "Deafen",
+      "description": "Deafen: mute headset and microphone",
+      "keywords": [
+        "discord",
+        "deafen",
+        "speaker",
+        "sourdine"
+      ],
+      "mode": "no-view"
+    },
+    {
+      "name": "ddiscord-undeafen",
+      "title": "Undeafen",
+      "description": "Undeafen: restore headset sound",
+      "keywords": [
+        "discord",
+        "undeafen",
+        "speaker",
+        "sourdine"
+      ],
+      "mode": "no-view"
+    },
+    {
       "name": "ddiscord-voice-members",
       "title": "Voice Members",
       "description": "Who is connected in the current voice channel",

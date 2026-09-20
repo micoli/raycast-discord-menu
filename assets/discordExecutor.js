@@ -99,16 +99,16 @@
           return this.stopScreenShare();
         case "toggleMicrophone":
           return this.clickSwitch(discordSelectorLabels.mute);
-        case "setMicrophoneOn":
-          return this.clickSwitch(discordSelectorLabels.mute, true);
-        case "setMicrophoneOff":
+        case "muteMicrophone":
           return this.clickSwitch(discordSelectorLabels.mute, false);
+        case "unmuteMicrophone":
+          return this.clickSwitch(discordSelectorLabels.mute, true);
         case "toggleSpeaker":
           return this.clickSwitch(discordSelectorLabels.noSpeaker);
-        case "setSpeakerOn":
-          return this.clickSwitch(discordSelectorLabels.noSpeaker, true);
-        case "setSpeakerOff":
+        case "deafen":
           return this.clickSwitch(discordSelectorLabels.noSpeaker, false);
+        case "undeafen":
+          return this.clickSwitch(discordSelectorLabels.noSpeaker, true);
         case "getVoiceMembers":
           return readConnectedVoiceChannel();
         default:
@@ -140,14 +140,14 @@
       var _a;
       (_a = findByAriaLabel(discordSelectorLabels.stopStreaming)) == null ? void 0 : _a.click();
     }
-    // For a switch, aria-checked=true means the feature is active (muted / deafened)
-    clickSwitch(label, onlyWhenChecked) {
+    // aria-checked=true means muted / deafened. With requiredState, click only if the switch is currently in that state
+    clickSwitch(label, requiredState) {
       const button = findByAriaLabel(label);
       if (!button) {
         throw new Error(`Button not found: ${label}`);
       }
       const isChecked = button.getAttribute("aria-checked") === "true";
-      if (onlyWhenChecked !== void 0 && isChecked !== onlyWhenChecked) {
+      if (requiredState !== void 0 && isChecked !== requiredState) {
         return;
       }
       button.click();

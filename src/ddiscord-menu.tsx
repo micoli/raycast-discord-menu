@@ -10,7 +10,11 @@ const voiceCommands: MenuCommand[] = [
 
 const audioCommands: MenuCommand[] = [
   { title: "Toggle Microphone", icon: Icon.Microphone, command: "ddiscord-toggle-microphone" },
+  { title: "Mute", icon: Icon.MicrophoneDisabled, command: "ddiscord-mute" },
+  { title: "Unmute", icon: Icon.Microphone, command: "ddiscord-unmute" },
   { title: "Toggle Speaker", icon: Icon.Speaker, command: "ddiscord-toggle-speaker" },
+  { title: "Deafen", icon: Icon.SpeakerOff, command: "ddiscord-deafen" },
+  { title: "Undeafen", icon: Icon.Speaker, command: "ddiscord-undeafen" },
 ];
 
 export default function Command() {

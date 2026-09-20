@@ -2,11 +2,11 @@ export type DiscordMessage =
   | { type: "startScreenShare"; screenIndex?: number }
   | { type: "stopScreenShare" }
   | { type: "toggleMicrophone" }
-  | { type: "setMicrophoneOn" }
-  | { type: "setMicrophoneOff" }
+  | { type: "muteMicrophone" }
+  | { type: "unmuteMicrophone" }
   | { type: "toggleSpeaker" }
-  | { type: "setSpeakerOn" }
-  | { type: "setSpeakerOff" }
+  | { type: "deafen" }
+  | { type: "undeafen" }
   | { type: "getVoiceMembers" };
 
 export type VoiceMember = {

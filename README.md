@@ -9,7 +9,7 @@ Communications between raycast extension and discord are made through devTools r
 The injected script is installed automatically by the first command (and after each Discord reload).
 Discord needs the macOS `Screen & System Audio Recording` permission to list screens in the share picker.
 
-Commands: stream screen 1 / 2, stop stream, toggle microphone, toggle speaker, voice members (who is in your current voice channel).
+Commands: stream screen 1 / 2, stop stream, toggle / mute / unmute microphone, toggle / deafen / undeafen speaker, voice members (who is in your current voice channel).
 
 ![img_2.png](assets/img_2.png)
 ![img_1.png](assets/img_1.png)
