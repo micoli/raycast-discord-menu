@@ -149,7 +149,8 @@
       "name": "ddiscord-menu",
       "title": "Commands Menu",
       "description": "Shortcuts for discord stream",
-      "mode": "menu-bar"
+      "mode": "menu-bar",
+      "interval": "10s"
     }
   ],
   "dependencies": {
