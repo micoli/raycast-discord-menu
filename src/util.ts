@@ -62,19 +62,27 @@ const openSession = (webSocketDebuggerUrl: string) =>
     );
   });
 
-const readInjectedBundle = () => fs.readFileSync(path.join(environment.assetsPath, "discordExecutor.js"), "utf8");
+const injectedBundlePath = () => path.join(environment.assetsPath, "discordExecutor.js");
+
+const readInjectedBundle = () => fs.readFileSync(injectedBundlePath(), "utf8");
+
+const bundleVersion = () => String(fs.statSync(injectedBundlePath()).mtimeMs);
 
 const menuRefreshUrl = `raycast://extensions/${environment.ownerOrAuthorName}/${environment.extensionName}/ddiscord-menu?launchType=background`;
 
 // launchType=background keeps raycast in the background, the watcher process opens this url when the discord state changes
 const ensureExecutor = async (session: CdpSession, forceInject: boolean) => {
+  const version = bundleVersion();
+  const injectedVersion = await session.evaluate("document.discordExecutor?.bundleVersion ?? null");
   const isWatching = await session.evaluate("document.discordExecutor?.watching === true");
-  if (!forceInject && isWatching) {
+  if (!forceInject && isWatching && injectedVersion === version) {
     return;
   }
   await session.evaluate(readInjectedBundle());
   const watchMessage: DiscordMessage = { type: "watchState" };
-  await session.evaluate(`document.discordExecutor.run(${JSON.stringify(watchMessage)})`);
+  await session.evaluate(
+    `document.discordExecutor.bundleVersion = ${JSON.stringify(version)}; document.discordExecutor.run(${JSON.stringify(watchMessage)})`,
+  );
 };
 
 const withDiscord = async <T>(action: (session: CdpSession) => Promise<T>, { forceInject = false } = {}) => {

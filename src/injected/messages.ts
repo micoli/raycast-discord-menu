@@ -21,6 +21,7 @@ export type VoiceChannelState = {
 };
 
 export type DiscordState = {
+  connected: boolean;
   muted: boolean;
   deafened: boolean;
   sharing: boolean;

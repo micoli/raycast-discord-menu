@@ -84,6 +84,7 @@ export const readConnectedVoiceChannel = (): VoiceChannelState | null => {
 const isSwitchChecked = (label: string) => findByAriaLabel(label)?.getAttribute("aria-checked") === "true";
 
 export const readDiscordState = (): DiscordState => ({
+  connected: isConnectedToVoice(),
   muted: isSwitchChecked(discordSelectorLabels.mute),
   deafened: isSwitchChecked(discordSelectorLabels.noSpeaker),
   sharing: findShareButton()?.getAttribute("aria-pressed") === "true",

@@ -12,10 +12,12 @@ type MenuCommand = {
   isEnabled?: (state: DiscordState) => boolean;
 };
 
+const canStartStream = (state: DiscordState) => state.connected && !state.sharing;
+
 const voiceCommands: MenuCommand[] = [
-  { title: "Stream screen 1", icon: Icon.Number01, command: "ddiscord-stream-screen-1" },
-  { title: "Stream screen 2", icon: Icon.Number02, command: "ddiscord-stream-screen-2" },
-  { title: "Stop Stream", icon: Icon.Stop, command: "ddiscord-stop-stream" },
+  { title: "Stream screen 1", icon: Icon.Number01, command: "ddiscord-stream-screen-1", isEnabled: canStartStream },
+  { title: "Stream screen 2", icon: Icon.Number02, command: "ddiscord-stream-screen-2", isEnabled: canStartStream },
+  { title: "Stop Stream", icon: Icon.Stop, command: "ddiscord-stop-stream", isEnabled: (state) => state.sharing },
 ];
 
 const audioCommands: MenuCommand[] = [

@@ -12,6 +12,8 @@ import { waitFor } from "./robot";
 import { startStateWatcher } from "./state-watcher";
 
 export class DiscordExecutor {
+  // Set by raycast right after the injection, a different value means the bundle is outdated
+  bundleVersion?: string;
   watching = false;
   private stopWatching?: () => void;
 

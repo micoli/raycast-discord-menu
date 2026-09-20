@@ -80,6 +80,7 @@ var __publicField = (obj, key, value) => __defNormalProp(obj, typeof key !== "sy
   const readDiscordState = () => {
     var _a2;
     return {
+      connected: isConnectedToVoice(),
       muted: isSwitchChecked(discordSelectorLabels.mute),
       deafened: isSwitchChecked(discordSelectorLabels.noSpeaker),
       sharing: ((_a2 = findShareButton()) == null ? void 0 : _a2.getAttribute("aria-pressed")) === "true",
@@ -146,6 +147,8 @@ var __publicField = (obj, key, value) => __defNormalProp(obj, typeof key !== "sy
   };
   class DiscordExecutor {
     constructor() {
+      // Set by raycast right after the injection, a different value means the bundle is outdated
+      __publicField(this, "bundleVersion");
       __publicField(this, "watching", false);
       __publicField(this, "stopWatching");
     }
